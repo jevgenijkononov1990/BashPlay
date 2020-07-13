@@ -1,0 +1,10 @@
+{
+    "settings": {
+      "userMainFoldername" : "Users",
+      "userFolders":[
+        { "name": "Documents" },
+        { "name": "Pictures" },
+        { "name": "Videos" }
+      ]
+    }
+  }

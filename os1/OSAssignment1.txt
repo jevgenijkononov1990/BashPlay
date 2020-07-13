@@ -1,0 +1,118 @@
+ #!/bin/bash
+  2
+  3 #====================================================================================================
+  4 #
+  5 #This is a script for Assignment 1 Operating Systems by Edvin Kartanovic
+  6 #Purpose of this script is to produce a program wrapper entry point for new employees
+  7 #This script should succesfully implement a CSV file called Employees.csv to gather information for account creation from it
+  8 #
+  9 #
+ 10 #====================================================================================================
+ 11
+ 12 #Exit codes
+ 13 success=0
+ 14 argument_invalid=1
+ 15 no_csvfile=2
+ 16
+ 17 #Main Parent directory name which will contain other user directories
+ 18 user_parent_dir="users"
+ 19
+ 20 #----------------------------------------------------------------------------------------------------
+ 21 #Script Information for usage
+ 22 usage()
+ 23 {
+ 24  echo "Usage:$0 Employees.csv"
+ 25 }
+ 26
+ 27 #The process which will create accounts
+ 28 createAccount()
+ 29 {
+ 30 ps -ef | grep -v 'grep' | grep userman
+ 31 }
+ 32
+ 33 #This bash script will check if the csv file input is present
+ 34 if [ ! -f "Employees.csv" ]
+ 35 then
+ 36  echo "Error:Input file \"Employees.csv\"Is not present"
+ 37 usage
+ 38 exit "$no_csvfile"
+ 39 else
+ 40 Csv_file=$1
+ 41 echo $Csv_file
+ 42 fi
+ 43
+ 44 #This bash script will check if the csv file exists
+ 45 #if ["$#" -ne 1]
+ 46 #then
+ 47 # echo "Error:Invalid number of arguments"
+ 48 #usage
+ 49 #exit "$argument_error"
+ 50 #else
+ 51  #Employees.csv="$1"
+ 52 #fi
+ 53
+ 54 #This bash script will provide information on the username and home directory during the script start-up phase
+ 55 current_username=$(whoami)
+ 56
+ 57 #This bash script will place employees in the parent directory for "users"
+ 58 user_dir="Users"
+ 59
+ 60 #This Bash script will create a users parent directory if it is not created
+ 61 if [ ! -f $user_dir ]&&[ ! -d $user_dir ]
+ 62 then
+ 63  mkdir $user_dir
+ 64 fi
+ 65
+ 66 #This bash script will create a log file under a proper day/month/year format inside $HOME/log directory
+ 67 logdir="log"
+ 68 logfile=$(date +"%Y-%m-%d".log)
+ 69
+ 70 if [ ! -f $logdir ]&&[ ! -d $logdir ]
+ 71 then
+ 72  mkdir $logdir
+ 73 fi
+ 74 log=$logdir/$logfile
+ 75
+ 76 #The csv file will extract columns with employee information while ignoring headers
+ 77 #[[ -n "$line"]] is used in order to avoid having the csv file proceeding using the last line instead of starting with a new line
+ 78 #last line is read by the "while" loop to avoid errors
+ 79 sed 'ld' $Csv_file | \
+ 80 while IFS= read -r line | [[ -n $line ]]
+ 81 do
+ 82  username=$(echo $line | cut -d'.' -f1)
+ 83  email=$(echo $line | cut -d'.' -f2)
+ 84  department=$(echo $line | cut -d'.' -f3)
+ 85  manager=$(echo $line | cut -d'.' -f4)
+ 86
+ 87 #This bash script will create a home dir for other users and capture the exit code
+ 88 if [!-d $user_dir/$username ]
+ 89 then
+ 90  #This is a process of account creation which will take 40 seconds to create
+ 91  sleep 40 &
+ 92
+ 93  #This will show a list of accounts created as well as the process
+ 94  createAccount &
+ 95
+ 96  mkdir $user_dir/$username &
+ 97  wait
+ 98
+ 99  mkdir $user_dir/$username/"Documents"
+100  mkdir $user_dir/$username/"Pictures"
+101  mkdir $user_dir/$username/"Videos"
+102
+103 #Log the user creation entry in the log
+104 date +"[%d/%m/%Y%H:%M:%S] Info: User \"$username\" has been created successfully" >> "$log" &
+105 else
+106 #Log the user failure entry in the log
+107 date +"[%d/%m/%Y%H:%M:%S] Error: User \"$username\" has been unsuccessful" >> "$log" &
+108 fi
+109
+110 #This bash script creates a Welcome.txt in users'Document directories for all employees as a assignment requirement
+111 cat <<EOF> "$user_dir/$username/Documents/Welcome.txt" &
+112 Welcome to the business. $username.
+113 We are pleased to have you working in the $department department.
+114 If you have any questions. please speak to your manager. $manager.
+115 Your email adress is $email
+116
+117 Done
+118 exit "$success
